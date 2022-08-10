@@ -2,34 +2,31 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
 
-import { serve } from "https://deno.land/std@0.131.0/http/server.ts"
-import { supabaseClient } from "../_shared/spbaseClient"
+import { serve } from 'https://deno.land/std@0.131.0/http/server.ts'
+import { supabaseClient, supabaseAdmin } from '../_shared/supabaseClient.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
-console.log("Hello from Functions!")
+console.log('Hello from Functions!')
 
 serve(async (req) => {
-  const { body } = await req.json()
+  const body = await req.json()
 
   // HTTP Method validation
-  if (req.method != 'POST') {
-    return new Response(JSON.stringify({ error: 'Invalid Method' }), {
-      status: 405,
-    })
+  if (req.method == 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   // Set the Auth context of the user that called the function.
   // This way your row-level-security (RLS) policies are applied.
   supabaseClient.auth.setAuth(req.headers.get('Authorization')!.replace('Bearer ', ''))
-
-  const { data, error } = await supabaseClient.from('profiles').insert(body)
-
+  
+  const { data, error } = await supabaseClient.from('profiles_public').insert(body)
+  console.log({ data, error })
+  
   if (error) {
     return new Response(JSON.stringify(error), { status: 400 })
   }
-  return new Response(
-    JSON.stringify({ profile: data}),
-    { status: 200 },
-  )
+  return new Response(JSON.stringify(data), { status: 200 },)
 })
 
 // To invoke:
