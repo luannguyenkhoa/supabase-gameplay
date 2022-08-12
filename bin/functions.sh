@@ -1,1 +1,0 @@
-supabase functions serve $1
